@@ -317,29 +317,3 @@ cd terraform/
 terraform destroy -var-file terraform.tfvars -auto-approve
 ```
 
----
-
-## Required Consul Ports
-
-| Port | Protocol | Purpose |
-|---|---|---|
-| 8300 | TCP | RPC server communication |
-| 8301 | TCP/UDP | LAN Serf gossip |
-| 8302 | TCP/UDP | WAN Serf gossip |
-| 8500 | TCP | HTTP API / UI |
-| 8501 | TCP | HTTPS API (TLS) |
-| 8600 | TCP/UDP | DNS |
-| 8443 | TCP | Mesh Gateway |
-
----
-
-## References
-
-| Resource | Link |
-|---|---|
-| Consul Crash Course (TechWorld with Nana) | https://www.youtube.com/watch?v=s3I1kKKfjtQ |
-| Nana's GitLab Repo | https://gitlab.com/twn-youtube/consul-crash-course |
-| GCP Microservices Demo | https://github.com/GoogleCloudPlatform/microservices-demo |
-| Consul Helm Chart Reference | https://developer.hashicorp.com/consul/docs/reference/k8s/helm |
-| Consul Required Ports | https://developer.hashicorp.com/consul/docs/reference/architecture/ports |
-| Consul Cluster Peering Docs | https://developer.hashicorp.com/consul/docs/connect/cluster-peering |

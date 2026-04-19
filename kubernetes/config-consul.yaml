@@ -8,7 +8,7 @@ spec:
     matchLabels:
       app: emailservice
   template:
-    metadata:
+    metadata: 
       labels:
         app: emailservice
       annotations:
