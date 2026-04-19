@@ -12,74 +12,7 @@ This project demonstrates deploying a multi-cluster, multi-cloud e-commerce appl
 
 The **Online Boutique** is a cloud-native microservices e-commerce demo by Google Cloud Platform. This project extends it by deploying across two Kubernetes clusters (AWS EKS + Linode LKE) connected via Consul service mesh with cluster peering and automatic failover for the `shippingservice`.
 
-### Architecture
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                     Multi-Cloud Setup                        │
-│                                                              │
-│  ┌───────────────────────┐    ┌─────────────────────────┐   │
-│  │   AWS EKS (Primary)   │◄──►│   Linode LKE (Secondary)│   │
-│  │                       │    │                         │   │
-│  │  Consul Server        │    │  Consul Server          │   │
-│  │  + Mesh Gateway       │    │  + Mesh Gateway         │   │
-│  │                       │    │                         │   │
-│  │  All microservices    │    │  shippingservice        │   │
-│  │  including            │    │  (failover target)      │   │
-│  │  shippingservice      │    │                         │   │
-│  │  (primary)            │    │                         │   │
-│  └───────────────────────┘    └─────────────────────────┘   │
-│                                                              │
-│  Failover: EKS shippingservice down → routes to LKE         │
-└──────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Repository Structure
-
-```
-.
-├── README.md
-├── kubernetes/
-│   ├── config.yaml                           # Microservices without Consul injection
-│   ├── config-consul.yaml                    # Microservices with Consul sidecar injection
-│   ├── consul-values.yaml                    # Helm values for Consul installation
-│   ├── consul-mesh-gateway.yaml              # Mesh CRD for cross-cluster peering
-│   ├── exported-service.yaml                 # Export shippingservice to peer cluster
-│   ├── intentions.yaml                       # Allow/deny traffic between services
-│   ├── service-resolver.yaml                 # Failover config for shippingservice
-│   ├── debug-pod.yaml                        # Debug pod for troubleshooting
-│   └── values-examples-with-explanations.yaml  # Annotated Helm values reference
-└── terraform/
-    ├── main.tf                               # EKS cluster + VPC
-    ├── variables.tf                          # Input variables
-    ├── providers.tf                          # AWS provider
-    ├── data.tf                               # Data sources
-    └── terraform.tfvars                      # Your credentials (do NOT commit)
-```
-
----
-
-## Microservices (Online Boutique by GCP)
-
-All images are pulled from Google Container Registry — no source build required.
-
-| Service | Image | Port |
-|---|---|---|
-| frontend | `gcr.io/google-samples/microservices-demo/frontend:v0.8.0` | 8080 |
-| cartservice | `gcr.io/google-samples/microservices-demo/cartservice:v0.8.0` | 7070 |
-| productcatalogservice | `gcr.io/google-samples/microservices-demo/productcatalogservice:v0.8.0` | 3550 |
-| currencyservice | `gcr.io/google-samples/microservices-demo/currencyservice` | 7000 |
-| paymentservice | `gcr.io/google-samples/microservices-demo/paymentservice:v0.8.0` | 50051 |
-| shippingservice | `gcr.io/google-samples/microservices-demo/shippingservice:v0.8.0` | 50052 |
-| emailservice | `gcr.io/google-samples/microservices-demo/emailservice:v0.8.0` | 5000 |
-| checkoutservice | `gcr.io/google-samples/microservices-demo/checkoutservice:v0.8.0` | 5050 |
-| recommendationservice | `gcr.io/google-samples/microservices-demo/recommendationservice:v0.8.0` | 8080 |
-| adservice | `gcr.io/google-samples/microservices-demo/adservice:v0.8.0` | 9555 |
-| redis-cart | `redis:alpine` | 6379 |
-
----
 
 ## Prerequisites
 
@@ -183,62 +116,7 @@ kubectl get svc frontend-external --context <eks-context>
 
 ---
 
-## Consul Helm Values
 
-Key settings in `kubernetes/consul-values.yaml`:
-
-```yaml
-global:
-  image: "hashicorp/consul:1.14.0"
-  peering:
-    enabled: true        # enables cluster peering
-  tls:
-    enabled: true        # encrypts all service mesh traffic
-
-connectInject:
-  enabled: true
-  default: true          # auto-inject Consul sidecar to all pods
-
-meshGateway:
-  enabled: true          # required for cross-cluster traffic
-
-ui:
-  service:
-    type: LoadBalancer   # expose Consul UI externally
-```
-
----
-
-## Failover Demo
-
-`kubernetes/service-resolver.yaml` configures automatic failover:
-
-```yaml
-spec:
-  failover:
-    '*':
-      targets:
-        - peer: 'lke'    # if EKS shippingservice is down, route to LKE
-```
-
-Test it:
-```sh
-# Scale down shippingservice on EKS
-kubectl scale deployment shippingservice --replicas=0 --context <eks-context>
-
-# Checkout still works — Consul routes shipping calls to LKE automatically
-```
-
----
-
-## Consul UI
-
-```sh
-kubectl port-forward svc/consul-ui 8500:80 -n consul --context <eks-context>
-# Open http://localhost:8500
-```
-
----
 
 ## Terraform Commands
 
@@ -260,18 +138,6 @@ terraform destroy -var-file terraform.tfvars -auto-approve
 
 # Show current state
 terraform state list
-```
-
----
-
-## Cleanup
-
-```sh
-kubectl delete -f kubernetes/config-consul.yaml --context <eks-context>
-helm uninstall consul -n consul --kube-context <eks-context>
-helm uninstall consul -n consul --kube-context <lke-context>
-cd terraform/
-terraform destroy -var-file terraform.tfvars -auto-approve
 ```
 
 ---
