@@ -308,6 +308,22 @@ kubectl delete deployment shippingservice
 
 ---
 
+## Screenshots
+
+### EKS Consul UI  Peers (lke Active)
+![EKS Peers](static-files/devops3.png)
+
+### LKE Consul UI  Peers (eks Active)
+![LKE Peers](static-files/devops4.png)
+
+### Linode NodeBalancers 
+![Linode NodeBalancers](static-files/devops2.png)
+
+### Payment Service Intentions
+![Payment Service Intentions](static-files/devops1.png)
+
+---
+
 ## Cleanup
 
 ```sh
